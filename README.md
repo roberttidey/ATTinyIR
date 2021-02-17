@@ -17,8 +17,8 @@
 - Build under Arduino with Digistump support
 - Upload over USB
 - Quiescent current can be optimised
--	fuse start time to minimum
--	fuse clock select to internal 8MHz
+	- fuse start time to minimum
+	- fuse clock select to internal 8MHz
 
 ## Operation
 - Normally in sleep
@@ -30,28 +30,28 @@
 ## Serial Commands
 {'c','m','o','r','s','t','x','z'}
 - Save a code cCode,Type,Addr, Val1,Val2,Val3
--	Code=code number (0-31)
--	Type = 0(NEC),1(rc5),2(rc6),3(rc6Extended)
--	Addr = IR Address
--	Val = 1,2 or 3 data values
+	- Code=code number (0-31)
+	- Type = 0(NEC),1(rc5),2(rc6),3(rc6Extended)
+	- Addr = IR Address
+	- Val = 1,2 or 3 data values
 - Save a macro sequence mMacro,Sequence...
--	Macro = macro number (0-9)
--	Sequence is code number(0-31) + 32*delayTick(0-7) (Tick is 96mSec)
+	- Macro = macro number (0-9)
+	- Sequence is code number(0-31) + 32*delayTick(0-7) (Tick is 96mSec)
 - Adjust Timing oCmd,Val
--	Cmd 0 is read OSCVAL (Basic 8MHz clock), Ticks (to divide to 38.4KHz)
--	Cmd 1 is adjust OSCVAL (Val=0 decrement, Val=1 increment) 
--	Cmd 2 is adjust Ticks (Val=0 decrement, Val=1 increment) 
+	- Cmd 0 is read OSCVAL (Basic 8MHz clock), Ticks (to divide to 38.4KHz)
+	- Cmd 1 is adjust OSCVAL (Val=0 decrement, Val=1 increment) 
+	- Cmd 2 is adjust Ticks (Val=0 decrement, Val=1 increment) 
 - Read Macros and code r
--	Dumps all codes and Macros to serial port
+	- Dumps all codes and Macros to serial port
 - Set sleep Mode sMode
--	Mode 0(start sleeping), 1(temporary awake), 2(permanent awake)
--	use this again to set back to sleeping after configuration finished
+	- Mode 0(start sleeping), 1(temporary awake), 2(permanent awake)
+	- use this again to set back to sleeping after configuration finished
 - Test transmit a code tType,Address,Val1,Val2,Val3
--	same parameter definitions as c Command
+	- same parameter definitions as c Command
 - Execute Macro xMacro
--	Send macro sequence as previously defined
+	- Send macro sequence as previously defined
 - Send Code zCode
--	Send Code as previously defined
+	- Send Code as previously defined
 
 
 
