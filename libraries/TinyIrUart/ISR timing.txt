@@ -1,0 +1,11 @@
+TIM0_OVF timings
+Period 26 uSec
+Idle 1.62uSec
+
+IR internal 3.4uSec
+
+TX bit 4.1uS
+TX byte end 4.9uSec
+
+RX bit 4.0 uSec
+RX byte end 3.3uSec
