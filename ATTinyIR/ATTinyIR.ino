@@ -14,7 +14,7 @@
 #define PORT3_MASK 0x08
 
 //used for debugging, comment out to disable
-//#define FLAG_MASK 0x20
+//#define FLAG_ACTIVE 1
 #define FLAG_MASK 0x20
 #ifdef FLAG_ACTIVE
 	#define FLAG_ON PORTB |= FLAG_MASK;
@@ -48,15 +48,13 @@
 
 uint8_t txtOK[4] = {'O','K',13,10};
 uint8_t txtBUT[12] = {'B','x',13,10};
-uint8_t txtBAD[5] = {'B','A','D',13,10};
-
-uint8_t rxGet[32];
+uint8_t txtBAD[6] = {'B','A','D',' ',13,10};
 uint8_t txCount;
-uint8_t rxCount;
 
-#define PARAMETERS_MAX 16
+#define PARAMETERS_MAX 24
 uint8_t rxParameters[PARAMETERS_MAX];
 uint8_t rxParameterCount;
+uint8_t rxCommand = 0;
 
 #define IRDEVICES_MAX 10
 //ir code for a device
@@ -149,36 +147,10 @@ void sleepTillButton () {
 	}
 	//restore uart tx high
 	PORTB |= 1<<UART_TX;
-}
-
-//get ,separated parameters from serial data line
-void parseParameters() {
-	uint8_t c,i,p;
+	//clear out rx and reset command processing
+	tinyIU_rxReset();
+	rxCommand = 0;
 	rxParameterCount = 0;
-	i = 1;
-	p =0;
-	while(i < rxCount && rxParameterCount < PARAMETERS_MAX) {
-		c = rxGet[i];
-		if(c != ',' || i == (rxCount-1)) {
-			p = p * 10 + c - 48;
-		}
-		if(c == ',' || i == (rxCount-1)) {
-			rxParameters[rxParameterCount++] = p;
-			p = 0;
-		}
-		i++;
-	}
-}
-
-// check for received char if available and check for complete line
-uint8_t checkRX() {
-	uint8_t r = 0;
-	while(tinyIU_rxByteCount() && r == 0) {
-		rxGet[rxCount] = tinyIU_getRx();
-		rxCount++;
-		r = (rxGet[rxCount-1] == 0x0a);
-	}	
-	return r;
 }
 
 // send chars and wait for complete or wait mSec
@@ -240,7 +212,8 @@ void addCode() {
 		eeprom_write_block(&rxParameters[1], d, EEPROM_CODE_LEN);
 		sendTx(txtOK, 4, 50);	
 	} else {
-		sendTx(txtBAD, 5, 50);			
+		txtBAD[3] = '0';
+		sendTx(txtBAD, 6, 50);			
 	}
 }
 
@@ -253,7 +226,8 @@ void addMacro() {
 		eeprom_write_block(&rxParameters[1], d, EEPROM_MACRO_LEN);
 		sendTx(txtOK, 4, 50);	
 	} else {
-		sendTx(txtBAD, 5, 50);			
+		txtBAD[3] = '1';
+		sendTx(txtBAD, 6, 50);			
 	}
 }
 
@@ -312,33 +286,45 @@ void executeCode(uint8_t code) {
 }
 
 // process an rx command
-void handleCmd(uint8_t cmd) {
-	parseParameters();
-	switch(cmd) {
-		case 0 : // 'c'
-				addCode();
+void handleCmd() {
+	uint8_t cmd;
+	if(rxCommand) {
+		for(cmd = 0; cmd < NUM_COMMANDS; cmd++) {
+			if(rxCommand == cmds[cmd]) {
 				break;
-		case 1 : // 'm'
-				addMacro();
-				break;
-		case 2 : // '0'
-				clkParams();
-				break;
-		case 3 : // 'r'
-				readAll();
-				break;
-		case 4 : // 's'
-				sleepMode = rxParameters[0];
-				break;
-		case 5 : // 't'
-				transmitCode();
-				break;
-		case 6 : // 'x'
-				executeMacro(rxParameters[0]);
-				break;
-		case 7 : // 'z'
-				executeCode(rxParameters[0]);
-				break;
+			}
+		}
+		if(cmd  < NUM_COMMANDS) {
+			switch(cmd) {
+				case 0 : // 'c'
+						addCode();
+						break;
+				case 1 : // 'm'
+						addMacro();
+						break;
+				case 2 : // '0'
+						clkParams();
+						break;
+				case 3 : // 'r'
+						readAll();
+						break;
+				case 4 : // 's'
+						sleepMode = rxParameters[0];
+						break;
+				case 5 : // 't'
+						transmitCode();
+						break;
+				case 6 : // 'x'
+						executeMacro(rxParameters[0]);
+						break;
+				case 7 : // 'z'
+						executeCode(rxParameters[0]);
+						break;
+			}
+		} else {
+			txtBAD[3] = rxCommand;
+			sendTx(txtBAD, 6, 50);			
+		}
 	}
 }
 
@@ -381,33 +367,32 @@ void handleIR() {
 	}
 }
 
-//serial receive processing
+// check for received chars, parse and do command if required
 void handleRX() {
-	//remove lf and terminate String
-	uint8_t i;
 	uint8_t c;
-	
-	rxGet[rxCount-1] = 0;
-	rxCount--;
-	//remove cr if present
-	if(rxCount && rxGet[rxCount-1] == 0x0d) {
-		rxGet[rxCount-1] = 0;
-		rxCount--;
-	}
-	if(rxCount) {
-		c = rxGet[0];
-		for(i = 0; i < NUM_COMMANDS; i++) {
-			if(c == cmds[i]) {
+	while(tinyIU_rxByteCount()) {
+		c = tinyIU_getRx();
+		if(c != 0x0d) {
+			if(c == 0x0a) {
+				rxParameterCount++;
+				handleCmd();
+				rxParameterCount = 0;
+				rxCommand = 0;
 				break;
+			} else if(rxCommand == 0) {
+				//first character is command letter
+				rxCommand = c;
+				rxParameterCount = 0;
+				rxParameters[0] = 0;
+			} else if(c>47 && c<58) {
+				rxParameters[rxParameterCount] *= 10;
+				rxParameters[rxParameterCount] += (c-48);
+			} else if(c == ',') {
+				rxParameterCount++;
+				rxParameters[rxParameterCount] = 0;
 			}
 		}
-		if(i  < NUM_COMMANDS) {
-			handleCmd(i);
-		} else {
-			sendTx(txtBAD, 5, 50);			
-		}
 	}
-	rxCount = 0;
 }
 
 // check buttons for actions
@@ -471,19 +456,20 @@ void setup() {
 	}
 	tinyIU_init(ticks0, BAUD_DIV, MODULATION, UART_TX, UART_RX);
 	txCount = 0;
-	rxCount = 0;
+	rxParameterCount = 0;
+	rxCommand = 0;
 	//set port 3 output low
 	PORTB &= ~PORT3_MASK;
 	DDRB |= PORT3_MASK;
-	//set FLAG output low
+#ifdef FLAG_ACTIVE
+//set FLAG output low
 	PORTB &= ~FLAG_MASK;
 	DDRB |= FLAG_MASK;
+#endif
 }
 
 void loop() {
-	if(checkRX() && rxCount) {
-		handleRX();
-	}
+	handleRX();
 	if(doDelay == 0) {
 		if(irReady == 1) {
 			handleIR();
