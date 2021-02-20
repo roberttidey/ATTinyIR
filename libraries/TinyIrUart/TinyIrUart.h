@@ -21,7 +21,7 @@
 #define TXCOUNT 10
 
 //RX buffer size. Should be 2^n - 1
-#define RXBUFFER_MASK 63
+#define RXBUFFER_MASK 7
 
 void tinyIU_init(uint8_t ticks, uint8_t baud, uint8_t modulation, uint8_t TXpin,  uint8_t RXpin);
 
@@ -48,3 +48,6 @@ uint8_t tinyIU_txByteCount();
 
 //returns number of Bytes available
 uint8_t tinyIU_rxByteCount();
+
+// clear out RX
+uint8_t tinyIU_rxReset();

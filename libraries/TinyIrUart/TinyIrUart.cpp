@@ -238,11 +238,13 @@ void tinyIU_sendRC(uint8_t rcType, uint8_t toggle, uint8_t addr, uint8_t cmd, ui
 		period = 0x11; // 450uS
 		irData[0] = period * 6 | 0x80; // 2.65mS high
 		irData[1] = period << 1; // 900uS low
+		irData[2] = period | 0x80; // 450uS high
+		irData[3] = period; // 450uS low
 		// field bits
 		for(k = 4; k < 10; k++) {
-			irData[k] = period | 0x80; // 450uS high
-			k++;
 			irData[k] = period; // 450uS low
+			k++;
+			irData[k] = period | 0x80; // 450uS high
 		}
 		p = period << 1;
 		k = 10;
@@ -345,9 +347,15 @@ uint8_t tinyIU_txByteCount() {
   return TXByteCount;
 }
 
-/**
-  get rx count
-**/
 uint8_t tinyIU_rxByteCount() {
 	return (RXBufferHead - RXBufferTail) & (RXBUFFER_MASK);
+}
+
+/**
+  clear out RX
+**/
+uint8_t tinyIU_rxReset() {
+	RXState = 0;
+	RXBufferHead = 0;
+	RXBufferTail = 0;
 }
