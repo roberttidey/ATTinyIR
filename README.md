@@ -53,7 +53,17 @@
 - Send Code zCode
 	- Send Code as previously defined
 
-
+## Capture IR codes
+- Often the codes for a remote can be found on the web
+- A utility rxirEx.py is also provided in the docs folder which can get codes for nec and rc6 based remotes
+- This can be run on a Raspberry Pi with an IR receiver connected to a GPIO pin (24 default)
+- IR polarity is defined near top of rxirEx.py (default is high is IR active, using an inverting buffer to amplify output of receiver)
+- Prepare a text file like the example (philipstv-top) which contains a list of the buttons to capture
+- Run the program, enter device name (e.g. philipstv, subset of buttons (e.g. top), protocol (e.g. rc6) and retry (e.g. n)
+- It will prompt for each button to be pressed in turn
+- Results are placed in device.ircodes (e.g. philipstv.ircodes)
+- Each button has the hex and binary data received and the address and command values are at the end of the line
+- These last two values are what is needed to program the ATTinyIR device
 
 
 
