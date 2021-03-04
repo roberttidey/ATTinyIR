@@ -69,7 +69,7 @@ uint8_t irDevice[IRDEVICE_FIELDS];
 uint8_t irToggles[IRDEVICES_MAX];
 uint8_t rcLengths[3] = {11,16,32};
 uint8_t irReady = 0;
-uint8_t doDelay = 0;
+uint16_t doDelay = 0;
 uint8_t ticks0 = DFLT_TICKS0;
 
 // add,delete,read,save,transmit,execute
@@ -336,7 +336,12 @@ void handleMacro() {
 		macroPtr = 0;
 		sendTx(txtOK, 4, 50);	
 	} else {
-		doDelay = m & 0xe0;
+		// binary logarithmic delay based on top 3 bits
+		// 0,100,200,400,800,1600,3200,6400mSec
+		doDelay = m >> 5;
+		if(doDelay) {
+			doDelay = 33 << (doDelay - 1);
+		}
 		m &= 0x1f;
 		if(m != 0x1f) {
 			p = (uint8_t*)(EEPROM_CODE_BASE + (m & 0x0f) * EEPROM_CODE_LEN);
@@ -447,7 +452,7 @@ void setup() {
 	TCCR1 = (TCCR1 & 0xF0) | 6; // timer1 prescale 32 for 4uS ticks
 	sei(); // Enable interrupts	int i;
 	ADCSRA = ADCSRA_INIT;
-	ADCSRB = ADCSRB = ADCSRB_INIT;
+	ADCSRB = ADCSRB_INIT;
 	ADMUX = ADMUX_INIT;
 	//reset to defaults if button 0 down during power up
 	setClock(getAnalog() < 3);

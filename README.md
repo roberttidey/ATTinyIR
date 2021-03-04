@@ -36,7 +36,7 @@
 	- Val = 1,2 or 3 data values
 - Save a macro sequence mMacro,Sequence...
 	- Macro = macro number (0-9)
-	- Sequence is code number(0-31) + 32*delayTick(0-7) (Tick is 96mSec)
+	- Sequence is code(0-31)+32*delay(0-7) (0,100,200,400,800,1600,3200,6400mS)
 - Adjust Timing oCmd,Val
 	- Cmd 0 is read OSCVAL (Basic 8MHz clock), Ticks (to divide to 38.4KHz)
 	- Cmd 1 is adjust OSCVAL (Val=0 decrement, Val=1 increment) 
