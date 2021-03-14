@@ -7,7 +7,7 @@
 //	Bits 6 - 0 is tick count to maintain this level before next change
 //	Tick period is 26us
 //  Minimum period should be > 2 ticks 52uS 
-//  Maximum period is 127 * 26 = 3.2mSec use multiple periods fotlonger
+//  Maximum period is 127 * 26 = 3.2mSec use multiple periods for longer
 // ir carrier modulation for 1 state (must use pin 2 or 14)
 //
 // Supports a serial RX, TX at 1200, 2400, 4800 baud
@@ -145,14 +145,14 @@ void tinyIU_init(uint8_t ticks, uint8_t baud, uint8_t modulation, uint8_t TXpin,
 	rxtxBaud = baud;
 	TXMask = 1 << TXpin;
 	TXMaskI = ~TXMask;
-	if(TXpin >=0) {
+	if(TXpin < 6) {
 		TXMask = 1 << TXpin;
 		TXMaskI = ~TXMask;
 		PORTB |= TXMask;
 		DDRB |= TXMask;
 	}
 	RXMask = 1<< RXpin;
-	if(RXpin >=0) {
+	if(RXpin < 6) {
 		GIMSK |= (1<<PCIE);
 		PCMSK |= RXMask;
 		RXBufferHead = 0;
@@ -224,7 +224,6 @@ void tinyIU_sendNEC(uint8_t	 addr, uint8_t cmd) {
 	msg buffer needs 42(rc5), 78 bytes of space
 **/
 void tinyIU_sendRC(uint8_t rcType, uint8_t toggle, uint8_t addr, uint8_t cmd, uint8_t cmdEx1, uint8_t cmdEx2) {
-	uint8_t d;
 	uint8_t i;
 	uint8_t j;
 	uint8_t b;
@@ -278,7 +277,6 @@ void tinyIU_sendRC(uint8_t rcType, uint8_t toggle, uint8_t addr, uint8_t cmd, ui
 		}
 		k = 6;
 	}
-	d = 0;
 	for(i=0; i < 4 && t < rcType; i++) {
 		p = 8;
 		switch(i) {
@@ -354,7 +352,7 @@ uint8_t tinyIU_rxByteCount() {
 /**
   clear out RX
 **/
-uint8_t tinyIU_rxReset() {
+void tinyIU_rxReset() {
 	RXState = 0;
 	RXBufferHead = 0;
 	RXBufferTail = 0;

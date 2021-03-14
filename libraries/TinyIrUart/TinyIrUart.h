@@ -50,4 +50,4 @@ uint8_t tinyIU_txByteCount();
 uint8_t tinyIU_rxByteCount();
 
 // clear out RX
-uint8_t tinyIU_rxReset();
+void tinyIU_rxReset();

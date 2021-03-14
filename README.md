@@ -1,6 +1,10 @@
 # ATTiny IR transmitter
 10 button remote control with each button supporting macro commands sending a sequence of codes to different devices
 
+An improved version can be found at https://github.com/roberttidey/ATTinyTx
+This is more memory efficient and supports driving 433MHz Transmitters like Lightwave
+Codes will need to be redefined due to change in EEPROM layout
+
 ## Features
 - Based on ATTiny85 (DigiStamp)
 - Battery operated with low quiescent current for extended battery life
